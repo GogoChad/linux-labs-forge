@@ -1,0 +1,23 @@
+{
+  "name": "linux-lab-forge-server",
+  "version": "1.0.0",
+  "description": "Backend server for Linux Lab Forge SSH provisioning",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build:image": "docker build -t linux-lab-base -f Dockerfile ."
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "dockerode": "^4.0.2",
+    "node-pty": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}
