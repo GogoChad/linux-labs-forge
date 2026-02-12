@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Terminal, BookOpen, Home, Wrench } from 'lucide-react';
+import { Terminal, BookOpen, Home, Wrench, FileText, TerminalSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +10,8 @@ const Navbar = () => {
     { path: '/', label: 'Home', icon: Home },
     { path: '/labs', label: 'Labs', icon: BookOpen },
     { path: '/lab-builder', label: 'Lab Builder', icon: Wrench },
+    { path: '/documentation', label: 'Documentation', icon: FileText },
+    { path: '/man-page', label: 'Man Page', icon: TerminalSquare },
   ];
 
   return (

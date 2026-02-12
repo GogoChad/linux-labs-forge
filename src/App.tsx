@@ -9,6 +9,8 @@ import LabDetail from "./pages/LabDetail";
 import LabBuilder from "./pages/LabBuilder";
 import TerminalStandalone from "./pages/TerminalStandalone";
 import NotFound from "./pages/NotFound";
+import Documentation from "./pages/Documentation";
+import ManPage from "./pages/ManPage";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/labs/:id" element={<LabDetail />} />
           <Route path="/lab-builder" element={<LabBuilder />} />
           <Route path="/terminal-standalone" element={<TerminalStandalone />} />
+          <Route path="/documentation" element={<Documentation />} />
+          <Route path="/man-page" element={<ManPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

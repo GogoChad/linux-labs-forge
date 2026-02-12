@@ -32,6 +32,12 @@ const Footer = () => {
             <Link to="/lab-builder" className="hover:text-primary transition-colors">
               Lab Builder
             </Link>
+            <Link to="/documentation" className="hover:text-primary transition-colors">
+              Documentation
+            </Link>
+            <Link to="/man-page" className="hover:text-primary transition-colors">
+              Man Page
+            </Link>
           </nav>
 
           <div className="flex items-center gap-4">

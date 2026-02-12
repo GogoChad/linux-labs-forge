@@ -1,0 +1,447 @@
+export type CommandManualEntry = {
+  name: string;
+  summary: string;
+  synopsis: string;
+  theory: string;
+  useCase: string;
+  options: { flag: string; detail: string }[];
+  examples: { label: string; command: string; output?: string }[];
+  tip: string;
+  exercise: {
+    command: string;
+    question: string;
+    placeholder: string;
+    answers: string[];
+    hint: string;
+  };
+};
+
+export const commandManual: CommandManualEntry[] = [
+  {
+    name: "ls",
+    summary: "List files quickly.",
+    synopsis: "ls [OPTIONS] [PATH...]",
+    theory: "ls walks a directory's inode table via readdir/stat calls, surfacing metadata like permissions, ownership, and timestamps.",
+    useCase: "Before editing configs, run ls -lah /etc/nginx to confirm a file exists, its owner, and whether it is executable.",
+    options: [
+      { flag: "-l", detail: "Long listing format with permissions, owners, sizes, and dates." },
+      { flag: "-a", detail: "Include dotfiles and pseudo entries like . and .." },
+      { flag: "-h", detail: "Human readable sizes (e.g., 10K, 4.2M) when paired with -l." },
+      { flag: "-t", detail: "Sort by modification time (newest first). Combine with -r to invert." },
+    ],
+    examples: [
+      { label: "Inspect with metadata", command: "ls -lah /var/log" },
+      { label: "Newest first", command: "ls -ltrh ~/projects" },
+    ],
+    tip: "Export LS_COLORS or install exa/eza for nerd font icons, but plain ls works everywhere.",
+    exercise: {
+      command: "ls -a ~/configs",
+      question: "Which flag forces hidden dotfiles to appear in this listing?",
+      placeholder: "Type the flag, e.g., -a",
+      answers: ["-a", "--all"],
+      hint: "Use the short flag for 'all' entries.",
+    },
+  },
+  {
+    name: "grep",
+    summary: "Search text streams.",
+    synopsis: "grep [OPTIONS] PATTERN [FILE...]",
+    theory: "grep reads stdin or files line-by-line, applying DFAs/NFAs to highlight matches using basic or extended regex engines.",
+    useCase: "Pipe journalctl -u sshd | grep -C2 'Failed password' to isolate auth issues with surrounding context.",
+    options: [
+      { flag: "-i", detail: "Case-insensitive search." },
+      { flag: "-r", detail: "Recursive search through directories." },
+      { flag: "-n", detail: "Prefix matches with line numbers." },
+      { flag: "-C NUM", detail: "Show NUM lines of context around matches (use -A or -B for one-sided)." },
+    ],
+    examples: [
+      { label: "Find errors recursively", command: "grep -Rin 'ERR' ./server" },
+      { label: "Contextual search", command: "journalctl -u sshd | grep -C2 'Failed password'" },
+    ],
+    tip: "Prefer ripgrep for blazing speed, but grep is always pre-installed on barebones systems.",
+    exercise: {
+      command: "grep -i 'error' app.log",
+      question: "Which flag makes this search case-insensitive?",
+      placeholder: "Type the flag",
+      answers: ["-i", "--ignore-case"],
+      hint: "Lower/upper case should be treated the same.",
+    },
+  },
+  {
+    name: "chmod",
+    summary: "Adjust POSIX permissions.",
+    synopsis: "chmod [OPTIONS] MODE FILE...",
+    theory: "chmod flips the rwx bitmask stored on inodes, separately addressing user, group, and other classes in symbolic or octal form.",
+    useCase: "After writing a deployment script, run chmod 755 deploy.sh so CI runners can execute it safely.",
+    options: [
+      { flag: "u+rx", detail: "Grant read/execute to owner (user)." },
+      { flag: "go-w", detail: "Remove write permission from group and others." },
+      { flag: "755", detail: "Octal form → rwxr-xr-x (common for executables)." },
+      { flag: "--recursive", detail: "Apply changes to directories and their contents." },
+    ],
+    examples: [
+      { label: "Make script runnable", command: "chmod u+x scripts/deploy.sh" },
+      { label: "Lock down config", command: "chmod 640 ~/.ssh/config" },
+    ],
+    tip: "Remember: directories need execute (x) for traversal even if you only plan to list contents.",
+    exercise: {
+      command: "chmod 755 deploy.sh",
+      question: "What single octal digit grants group read+execute access in 755?",
+      placeholder: "Enter the digit",
+      answers: ["5"],
+      hint: "Read (4) + execute (1).",
+    },
+  },
+  {
+    name: "tar",
+    summary: "Bundle files into archives.",
+    synopsis: "tar [c|x|t] [OPTIONS] ARCHIVE FILE...",
+    theory: "tar serializes file payloads + headers (name, mode, timestamps) sequentially, optionally piping through compressors like gzip (z).",
+    useCase: "Create tar -czvf logs.tar.gz /var/log/nginx before transferring artifacts to a support engineer.",
+    options: [
+      { flag: "-c", detail: "Create a new archive." },
+      { flag: "-x", detail: "Extract archive contents." },
+      { flag: "-t", detail: "List archive contents without extracting." },
+      { flag: "-z / -j", detail: "Compress with gzip (-z) or bzip2 (-j). Use -J for xz." },
+      { flag: "-v", detail: "Verbose output (list files as they are processed)." },
+      { flag: "-f FILE", detail: "Specify archive file name (always place last among tar flags)." },
+    ],
+    examples: [
+      { label: "Create gz archive", command: "tar -czvf logs.tar.gz /var/log/nginx" },
+      { label: "Extract to custom dir", command: "tar -xvf backup.tar -C ~/restore" },
+    ],
+    tip: "When streaming over SSH, combine tar with pipes: tar -czf - dir | ssh host tar -xzf - -C /tmp.",
+    exercise: {
+      command: "tar -czvf logs.tar.gz /var/log/nginx",
+      question: "Which flag adds gzip compression to this tar invocation?",
+      placeholder: "Type the flag",
+      answers: ["-z", "--gzip"],
+      hint: "Think 'zip'.",
+    },
+  },
+  {
+    name: "systemctl",
+    summary: "Manage systemd units.",
+    synopsis: "systemctl [COMMAND] [UNIT]",
+    theory: "systemctl talks to the systemd D-Bus API, manipulating unit state machines (service, socket, timer) and querying status metadata.",
+    useCase: "When a service misbehaves, run sudo systemctl status sshd followed by sudo systemctl restart sshd to bounce it.",
+    options: [
+      { flag: "status UNIT", detail: "Show service state + log tail." },
+      { flag: "restart UNIT", detail: "Bounce a service with one command." },
+      { flag: "enable --now UNIT", detail: "Enable at boot and start immediately." },
+      { flag: "--user", detail: "Manage user-level units when not on sudo." },
+    ],
+    examples: [
+      { label: "Check SSH service", command: "sudo systemctl status sshd" },
+      { label: "Enable custom timer", command: "systemctl --user enable --now forge-sync.timer" },
+    ],
+    tip: "Pair with journalctl -fu UNIT for realtime logs when debugging restarts.",
+    exercise: {
+      command: "sudo systemctl status sshd",
+      question: "What subcommand queries the current state of sshd here?",
+      placeholder: "Type the word",
+      answers: ["status"],
+      hint: "It prints Active: lines.",
+    },
+  },
+  {
+    name: "cat",
+    summary: "Print file contents.",
+    synopsis: "cat [OPTIONS] [FILE...]",
+    theory: "cat streams bytes from file descriptors to stdout, concatenating buffers sequentially when multiple inputs are supplied.",
+    useCase: "Preview the top of a config with cat -n config/app.env | head -20 before editing it.",
+    options: [
+      { flag: "-n", detail: "Number every output line." },
+      { flag: "-b", detail: "Number only non-blank lines." },
+      { flag: "-s", detail: "Squeeze repeated blank lines." },
+      { flag: "-A", detail: "Show invisible characters (tabs, line endings)." },
+    ],
+    examples: [
+      { label: "Decorated preview", command: "cat -n script.sh | head -20" },
+      { label: "Concatenate", command: "cat part1.txt part2.txt > merged.txt" },
+    ],
+    tip: "For gigantic files, prefer less or tail so you do not flood the terminal buffer.",
+    exercise: {
+      command: "cat -n script.sh",
+      question: "Which option numbers every output line?",
+      placeholder: "Type the flag",
+      answers: ["-n"],
+      hint: "Think 'number'.",
+    },
+  },
+  {
+    name: "mkdir",
+    summary: "Create directories.",
+    synopsis: "mkdir [OPTIONS] DIRECTORY...",
+    theory: "mkdir issues system calls to allocate directory inodes and update parent directory entries, optionally setting permissions immediately.",
+    useCase: "When scaffolding labs, run mkdir -p labs/networking/logs to ensure nested folders exist in one go.",
+    options: [
+      { flag: "-p", detail: "Create parent directories as needed." },
+      { flag: "-m MODE", detail: "Set permissions (octal or symbolic) on creation." },
+      { flag: "-v", detail: "Verbose output per directory made." },
+      { flag: "-Z", detail: "Set SELinux security context (if supported)." },
+    ],
+    examples: [
+      { label: "Nested tree", command: "mkdir -p /srv/labs/filesystem/session1" },
+      { label: "Custom permissions", command: "mkdir -m 750 secrets" },
+    ],
+    tip: "Combine with install -d for portable scripts that also set ownership.",
+    exercise: {
+      command: "mkdir -p labs/networking",
+      question: "Which flag ensures parent directories are created when missing?",
+      placeholder: "Type the flag",
+      answers: ["-p", "--parents"],
+      hint: "It stands for 'parents'.",
+    },
+  },
+  {
+    name: "find",
+    summary: "Search filesystem trees.",
+    synopsis: "find PATH [EXPRESSION]",
+    theory: "find traverses directories depth-first, evaluating predicates (name, type, timestamps) and running actions such as print or exec.",
+    useCase: "Locate stale lab artifacts via find /tmp/labs -type f -mtime +1 -delete.",
+    options: [
+      { flag: "-name PATTERN", detail: "Match by shell-style pattern." },
+      { flag: "-type f|d", detail: "Filter by file or directory." },
+      { flag: "-mtime +/-N", detail: "Match files modified N days ago (use -1 for <24h)." },
+      { flag: "-maxdepth N", detail: "Limit recursion depth." },
+    ],
+    examples: [
+      { label: "Find scripts", command: "find ./server -type f -name '*.sh'" },
+      { label: "Prune node_modules", command: "find . -name 'node_modules' -prune" },
+    ],
+    tip: "Use -print0 with xargs -0 to handle paths containing spaces cleanly.",
+    exercise: {
+      command: "find ./labs -type d -maxdepth 2",
+      question: "What value must -type use to match directories only?",
+      placeholder: "Enter the letter",
+      answers: ["d"],
+      hint: "Files are f, directories are ?.",
+    },
+  },
+  {
+    name: "tail",
+    summary: "Show the end of files.",
+    synopsis: "tail [OPTIONS] [FILE...]",
+    theory: "tail seeks from the end of a file descriptor, streaming the final bytes and optionally following growth events.",
+    useCase: "Monitor container logs through tail -f /var/log/syslog while running labs.",
+    options: [
+      { flag: "-n NUM", detail: "Output the last NUM lines." },
+      { flag: "-f", detail: "Follow file growth (like live logs)." },
+      { flag: "-F", detail: "Follow and retry if the file is rotated." },
+      { flag: "-c NUM", detail: "Output the last NUM bytes." },
+    ],
+    examples: [
+      { label: "Watch logs", command: "tail -f server.log" },
+      { label: "Grab last 100 lines", command: "tail -n 100 /var/log/auth.log" },
+    ],
+    tip: "Pair with grep --line-buffered to highlight events in a live stream.",
+    exercise: {
+      command: "tail -f server.log",
+      question: "Which flag keeps tail attached to new log lines?",
+      placeholder: "Type the flag",
+      answers: ["-f", "--follow"],
+      hint: "It's the follow flag.",
+    },
+  },
+  {
+    name: "ps",
+    summary: "Inspect running processes.",
+    synopsis: "ps [OPTIONS]",
+    theory: "ps reads procfs (or native APIs) to list process descriptors, showing columns like PID, TTY, time, and command.",
+    useCase: "During labs that spawn multiple shells, run ps aux | grep sshd to confirm the right service is active.",
+    options: [
+      { flag: "aux", detail: "BSD style: show all processes with user and CPU/mem columns." },
+      { flag: "-ef", detail: "SysV style full-format with PPID column." },
+      { flag: "--sort=-pcpu", detail: "Sort output by CPU usage descending." },
+      { flag: "-o pid,cmd", detail: "Custom column selection." },
+    ],
+    examples: [
+      { label: "Tree view", command: "ps -ef --forest" },
+      { label: "Filter command", command: "ps aux | grep node" },
+    ],
+    tip: "Combine with watch to refresh every few seconds when monitoring runaway tasks.",
+    exercise: {
+      command: "ps aux --sort=-pcpu",
+      question: "Which long option sorts the process list by CPU here?",
+      placeholder: "Type the option",
+      answers: ["--sort"],
+      hint: "Starts with two dashes.",
+    },
+  },
+  {
+    name: "ssh",
+    summary: "Open secure shell sessions.",
+    synopsis: "ssh [OPTIONS] user@host",
+    theory: "ssh establishes encrypted sessions using key exchange and ciphers, tunneling interactive shells or commands over TCP.",
+    useCase: "Connect to the lab container via ssh student@labs.local -p 2222 -i ~/.ssh/labs_ed25519.",
+    options: [
+      { flag: "-i KEY", detail: "Specify identity file." },
+      { flag: "-p PORT", detail: "Override default port 22." },
+      { flag: "-J jumphost", detail: "Proxy through a jump host (SSH over SSH)." },
+      { flag: "-L LPORT:HOST:RPORT", detail: "Forward a local port through the tunnel." },
+    ],
+    examples: [
+      { label: "Command execution", command: "ssh ops@host 'sudo systemctl restart nginx'" },
+      { label: "Local forward", command: "ssh -L 15432:db.internal:5432 data@bastion" },
+    ],
+    tip: "Use config files (~/.ssh/config) to store host aliases, keys, and multiplexing options.",
+    exercise: {
+      command: "ssh -L 15432:db.internal:5432 data@bastion",
+      question: "Which flag opens the local port forward in this command?",
+      placeholder: "Type the flag",
+      answers: ["-L"],
+      hint: "Local forwarding flag.",
+    },
+  },
+  {
+    name: "curl",
+    summary: "Transfer data over HTTP(S).",
+    synopsis: "curl [OPTIONS] URL",
+    theory: "curl opens sockets to remote hosts, speaking HTTP, HTTPS, FTP, and more while streaming request/response bodies to stdout or files.",
+    useCase: "Probe your lab API with curl -s http://localhost:3001/health to confirm the backend is alive.",
+    options: [
+      { flag: "-s", detail: "Silent mode (no progress meter)." },
+      { flag: "-H 'Header: value'", detail: "Attach custom request headers." },
+      { flag: "-d DATA", detail: "Send body data (POST)." },
+      { flag: "-o FILE", detail: "Write response body to FILE." },
+    ],
+    examples: [
+      { label: "GET JSON", command: "curl -s https://api.github.com/repos/GogoChad/linux-lab-forge" },
+      { label: "POST payload", command: `curl -X POST -H 'Content-Type: application/json' -d '{"name":"lab"}' http://localhost:3001/labs` },
+    ],
+    tip: "Use -i to include response headers, or --resolve to hit local overrides.",
+    exercise: {
+      command: "curl -H 'Authorization: Bearer TOKEN' https://api.example.dev",
+      question: "Which option injects the HTTP header in this curl request?",
+      placeholder: "Type the flag",
+      answers: ["-H", "--header"],
+      hint: "It stands for header.",
+    },
+  },
+  {
+    name: "rsync",
+    summary: "Sync files efficiently.",
+    synopsis: "rsync [OPTIONS] SRC DEST",
+    theory: "rsync computes rolling checksums to transfer only changed blocks between source and destination paths, locally or over SSH.",
+    useCase: "Mirror generated labs to a remote host via rsync -avz dist/ ops@labs:/srv/www/labs.",
+    options: [
+      { flag: "-a", detail: "Archive mode (permissions, times, recursion)." },
+      { flag: "-v", detail: "Verbose progress." },
+      { flag: "-z", detail: "Compress data during transfer." },
+      { flag: "--delete", detail: "Remove files on destination that no longer exist at source." },
+    ],
+    examples: [
+      { label: "Local sync", command: "rsync -av src/ build/" },
+      { label: "Remote deploy", command: "rsync -avz dist/ user@box:/var/www/app" },
+    ],
+    tip: "Use --dry-run to preview changes and --progress for live stats.",
+    exercise: {
+      command: "rsync -avz dist/ user@box:/var/www/app",
+      question: "Which flag enables compression during transfer?",
+      placeholder: "Type the flag",
+      answers: ["-z"],
+      hint: "Zip it up en route.",
+    },
+  },
+  {
+    name: "sed",
+    summary: "Stream editor for text transforms.",
+    synopsis: "sed [OPTIONS] 'script' FILE",
+    theory: "sed reads input line-by-line, applying editing commands (substitute, delete, insert) before printing to stdout by default.",
+    useCase: "Mask secrets inside lab outputs with sed -E 's/(key=).+/\\\\1****/' .env",
+    options: [
+      { flag: "-n", detail: "Suppress automatic printing (useful with p command)." },
+      { flag: "-E", detail: "Use extended regular expressions." },
+      { flag: "-i", detail: "Edit files in place (optionally with backup suffix)." },
+      { flag: "-e SCRIPT", detail: "Add additional editing scripts." },
+    ],
+    examples: [
+      { label: "Substitute", command: "sed -E 's/foo/bar/g' input.txt" },
+      { label: "Delete comments", command: "sed '/^#/d' config.ini" },
+    ],
+    tip: "Test scripts without -i first to avoid destructive mistakes.",
+    exercise: {
+      command: "sed -n '5p' README.md",
+      question: "Which standalone sed command prints only matching lines when -n is used?",
+      placeholder: "Type the letter",
+      answers: ["p"],
+      hint: "Think 'print'.",
+    },
+  },
+  {
+    name: "awk",
+    summary: "Pattern scanning language.",
+    synopsis: "awk 'program' FILE",
+    theory: "awk parses input into records/fields, letting you run mini programs (conditions + actions) for quick analytics or transformations.",
+    useCase: "Compute average lab duration with awk '{ sum += $3 } END { print sum/NR }' durations.txt.",
+    options: [
+      { flag: "-F DELIM", detail: "Set field separator." },
+      { flag: "-v VAR=VAL", detail: "Pass variables into the AWK program." },
+      { flag: "-f SCRIPT", detail: "Load program from file." },
+      { flag: "--posix", detail: "Enable POSIX compliance." },
+    ],
+    examples: [
+      { label: "Column select", command: "awk '{print $1, $3}' report.txt" },
+      { label: "Filter + sum", command: `awk -F, '$2=="passed" {count++} END {print count}' results.csv` },
+    ],
+    tip: "Remember NR (line count) and NF (field count) for quick conditions.",
+    exercise: {
+      command: "awk -F: '{print $1}' /etc/passwd",
+      question: "Which option sets ':' as the field separator here?",
+      placeholder: "Type the flag",
+      answers: ["-F"],
+      hint: "F stands for field separator.",
+    },
+  },
+  {
+    name: "df",
+    summary: "Report disk usage by filesystem.",
+    synopsis: "df [OPTIONS] [PATH]",
+    theory: "df queries filesystem stats (statvfs) to display total, used, and available blocks for mounted volumes.",
+    useCase: "Check lab VM space via df -h / to ensure Docker pulls will succeed.",
+    options: [
+      { flag: "-h", detail: "Human readable sizes (GiB, MiB)." },
+      { flag: "-T", detail: "Show filesystem type." },
+      { flag: "-k", detail: "Display 1K blocks." },
+      { flag: "-x TYPE", detail: "Exclude specific filesystem type." },
+    ],
+    examples: [
+      { label: "Human view", command: "df -h" },
+      { label: "Focus mount", command: "df -h /var/lib/docker" },
+    ],
+    tip: "Combine with watch to track shrinking space during builds.",
+    exercise: {
+      command: "df -h /",
+      question: "Which flag renders sizes in human friendly units?",
+      placeholder: "Type the flag",
+      answers: ["-h"],
+      hint: "h for human.",
+    },
+  },
+  {
+    name: "du",
+    summary: "Summarize directory sizes.",
+    synopsis: "du [OPTIONS] [PATH]",
+    theory: "du walks directory trees summing file blocks, reporting cumulative sizes per directory or file.",
+    useCase: "See which labs hog space via du -sh server/exercises/*.",
+    options: [
+      { flag: "-s", detail: "Display only the total for each argument." },
+      { flag: "-h", detail: "Human readable units." },
+      { flag: "-d N", detail: "Limit depth of traversal." },
+      { flag: "--max-depth=N", detail: "GNU long form depth limit." },
+    ],
+    examples: [
+      { label: "Top-level report", command: "du -sh *" },
+      { label: "Depth limit", command: "du -h --max-depth=1 server" },
+    ],
+    tip: "Pair with sort -h to find the largest offenders quickly.",
+    exercise: {
+      command: "du -sh server",
+      question: "Which flag restricts output to a single summarized total here?",
+      placeholder: "Type the flag",
+      answers: ["-s"],
+      hint: "Think 'summary'.",
+    },
+  },
+];
