@@ -9,7 +9,7 @@ Hands-on Linux training platform with a real SSH-ready container backend, curate
 - **Real terminal** – `src/components/RealSSHTerminal.tsx` streams from the Node server over WebSockets, so users run the exact commands referenced in each lab.
 - **Structured curriculum** – 30+ labs grouped into categories (`src/data/labs.ts`) with metadata for difficulty, duration, and hints.
 - **Lab Builder** – Quickly create or preview custom labs through `src/pages/LabBuilder.tsx`, which persists definitions to `server/custom-labs.json` and generates shell scripts.
-- **Responsive UI** – Built with Tailwind, ShadCN-inspired primitives, and subtle Linux-themed easter eggs (hover the hero terminal penguin to see the ASCII logo from `src/assets/ascii-art.txt`).
+- **Responsive UI** – Built with Tailwind, ShadCN-inspired primitives.
 
 ## Tech Stack
 
