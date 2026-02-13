@@ -73,7 +73,7 @@ Open **two** terminals (or use the helper script):
 **Terminal A – Frontend**
 
 ```bash
-npm run dev     # http://localhost:5173 by default
+npm run dev     # http://localhost:8080 by default
 ```
 
 **Terminal B – Backend**
